@@ -155,7 +155,11 @@
 
 <!-- AR-режим: отдельная страница в iframe -->
 <div id="arFrame">
-  <iframe id="arIframe" allow="camera; microphone; xr-spatial-tracking"></iframe>
+  <iframe
+    id="arIframe"
+    allow="camera; microphone; xr-spatial-tracking; accelerometer; gyroscope; magnetometer; fullscreen"
+    allowfullscreen
+  ></iframe>
   <button id="arCloseBtn" onclick="stopARMode()">← Выйти</button>
 </div>
 
@@ -208,7 +212,19 @@
     showScreen('screen-video');
   }
 
+  // Проверка поддержки getUserMedia (важно для iOS Safari — только на HTTPS)
+  function checkCameraSupport() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      alert('Ваш браузер не поддерживает доступ к камере. ' +
+            'На iOS откройте сайт в Safari (не в приложении соцсети).');
+      return false;
+    }
+    return true;
+  }
+
   function startARMode() {
+    if (!checkCameraSupport()) return;
+
     // Загружаем AR-страницу в iframe — изолированно
     document.getElementById('arIframe').src = 'ar.html';
     document.getElementById('arFrame').className = 'active';
