@@ -7,31 +7,41 @@
 <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
 <style>
-  html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; }
+  html, body {
+    margin: 0; padding: 0;
+    width: 100%; height: 100%;
+    overflow: hidden;
+    background: #000;
+  }
 
-  /* Растягиваем видеофон камеры на весь экран */
-  .arjs-video {
+  /* Наш собственный видеофон */
+  #myCam {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+    z-index: 0;
+    background: #000;
+  }
+
+  /* Сцена поверх камеры, прозрачная */
+  .a-canvas {
     position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
+    top: 0 !important; left: 0 !important;
     width: 100vw !important;
     height: 100vh !important;
-    object-fit: cover !important;
-    z-index: 0 !important;
-  }
-
-  /* Сцена поверх видео */
-  a-scene, .a-canvas {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
     z-index: 1 !important;
     background: transparent !important;
+    background-color: transparent !important;
   }
 
-  .ar-video { position: absolute; width: 1px; height: 1px; left: -9999px; top: -9999px; opacity: 0.01; }
+  .hidden-video {
+    position: absolute;
+    width: 1px; height: 1px;
+    left: -9999px; top: -9999px;
+    opacity: 0.01;
+  }
 
   #backBtn {
     position: fixed; top: 12px; left: 12px; z-index: 999999;
@@ -40,18 +50,29 @@
     border: 1px solid #4fc3f7;
     font-family: Arial, sans-serif; font-size: 14px; cursor: pointer;
   }
+
+  #status {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    z-index: 999999; color: #fff; font-family: Arial; font-size: 13px;
+    background: rgba(0,0,0,0.6); padding: 8px 16px; border-radius: 16px;
+  }
 </style>
 </head>
 <body>
 
   <button id="backBtn" onclick="window.location.replace('index.html')">← Выйти</button>
+  <div id="status">Запуск камеры…</div>
 
+  <!-- Наш собственный видеоплеер с камеры -->
+  <video id="myCam" autoplay muted playsinline webkit-playsinline></video>
+
+  <!-- Сцена A-Frame, но БЕЗ sourceType: webcam (мы не даём AR.js самому включать камеру) -->
   <a-scene
     embedded
-    arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; sourceWidth: 640; sourceHeight: 480; displayWidth: 640; displayHeight: 480;"
+    arjs="sourceType: video; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
     vr-mode-ui="enabled: false"
-    renderer="logarithmicDepthBuffer: true; antialias: true; alpha: true;"
-    style="width:100%; height:100%;">
+    renderer="logarithmicDepthBuffer: true; antialias: true; alpha: true; premultipliedAlpha: false;"
+    style="width:100%; height:100%; background: transparent;">
 
     <a-marker type="pattern" url="1-building.patt">
       <a-video src="#v1" position="0 0 0" width="3" height="1.7" rotation="-90 0 0"></a-video>
@@ -60,24 +81,80 @@
     <a-entity camera></a-entity>
   </a-scene>
 
-  <video id="v1" class="ar-video" src="1-building.mp4" preload="auto" loop muted playsinline webkit-playsinline></video>
+  <!-- Скрытое видео для маркера -->
+  <video id="v1" class="hidden-video" src="1-building.mp4" preload="auto" loop muted playsinline webkit-playsinline></video>
 
   <script>
-    // Растягиваем видеофон камеры после загрузки AR.js
-    window.addEventListener('load', function() {
-      setTimeout(function() {
-        var arVideo = document.querySelector('.arjs-video');
-        if (arVideo) {
-          arVideo.style.position = 'fixed';
-          arVideo.style.top = '0';
-          arVideo.style.left = '0';
-          arVideo.style.width = '100vw';
-          arVideo.style.height = '100vh';
-          arVideo.style.objectFit = 'cover';
-          arVideo.style.zIndex = '0';
+    // === Открываем камеру сами через getUserMedia ===
+    var status = document.getElementById('status');
+    var myCam = document.getElementById('myCam');
+
+    async function openCamera() {
+      try {
+        // Пробуем несколько разрешений по очереди — на Xiaomi часто работает только одно
+        var constraintsList = [
+          { video: { facingMode: { ideal: 'environment' }, width: { ideal: 640 }, height: { ideal: 480 } } },
+          { video: { facingMode: 'environment' } },
+          { video: { width: { ideal: 640 }, height: { ideal: 480 } } },
+          { video: true }
+        ];
+
+        var stream = null;
+        for (var i = 0; i < constraintsList.length; i++) {
+          try {
+            status.textContent = 'Пробую параметры ' + (i+1) + '…';
+            stream = await navigator.mediaDevices.getUserMedia(constraintsList[i]);
+            if (stream) break;
+          } catch (e) {
+            console.log('Параметры ' + (i+1) + ' не сработали:', e.name);
+          }
         }
-      }, 1500);
-    });
+
+        if (!stream) {
+          status.textContent = 'Камера не открылась. Проверьте разрешения.';
+          return;
+        }
+
+        myCam.srcObject = stream;
+        await myCam.play();
+        status.textContent = '';
+        status.style.display = 'none';
+
+        // Передаём поток в AR.js — он теперь использует наше видео
+        if (window.ARjs && window.ARjs.Context && window.ARjs.Context.setVideoElement) {
+          window.ARjs.Context.setVideoElement(myCam);
+        } else {
+          // Альтернативный способ — через событие
+          var event = new CustomEvent('arjs-video-ready', { detail: myCam });
+          window.dispatchEvent(event);
+        }
+
+        // Растягиваем canvas поверх
+        setTimeout(fixCanvas, 1000);
+
+      } catch (e) {
+        status.textContent = 'Ошибка: ' + e.name;
+        console.error(e);
+      }
+    }
+
+    function fixCanvas() {
+      var canvases = document.querySelectorAll('canvas');
+      canvases.forEach(function(c) {
+        c.style.position = 'fixed';
+        c.style.top = '0';
+        c.style.left = '0';
+        c.style.width = '100vw';
+        c.style.height = '100vh';
+        c.style.background = 'transparent';
+        c.style.backgroundColor = 'transparent';
+        c.style.zIndex = '1';
+      });
+    }
+
+    window.addEventListener('load', openCamera);
+    window.addEventListener('resize', fixCanvas);
+
   </script>
 
 </body>
