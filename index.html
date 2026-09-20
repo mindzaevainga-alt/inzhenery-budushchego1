@@ -61,23 +61,6 @@
   .blank .col-num { width: 28px; }
   .blank .col-spec { width: 40%; }
   .blank input { width: 100%; background: transparent; border: none; color: #fff; font-family: Arial, sans-serif; font-size: 12px; padding: 4px; outline: none; }
-
-  #arFrame {
-    position: fixed; top: 0; left: 0;
-    width: 100%; height: 100%;
-    z-index: 99999; background: #000;
-    display: none;
-  }
-  #arFrame.active { display: block; }
-  #arFrame iframe { width: 100%; height: 100%; border: 0; }
-  #arCloseBtn {
-    position: absolute; top: 10px; left: 10px;
-    z-index: 100000;
-    padding: 10px 14px; border-radius: 20px;
-    background: #000; color: #fff;
-    border: 1px solid #4fc3f7;
-    font-family: Arial; font-size: 13px; cursor: pointer;
-  }
   .hidden { display: none !important; }
 </style>
 </head>
@@ -153,16 +136,6 @@
   <button class="btn btn-border" onclick="showScreen('screen-markers')">К маркерам</button>
 </div>
 
-<!-- AR-режим: отдельная страница в iframe -->
-<div id="arFrame">
-  <iframe
-    id="arIframe"
-    allow="camera; microphone; xr-spatial-tracking; accelerometer; gyroscope; magnetometer; fullscreen"
-    allowfullscreen
-  ></iframe>
-  <button id="arCloseBtn" onclick="stopARMode()">← Выйти</button>
-</div>
-
 <script>
   var scenes = {
     1: { title: 'Строительство военных объектов', desc: 'Проектирование, возведение и восстановление военных объектов.', vuz: 'Военно-инженерная академия имени Д.М. Карбышева', video: '1-building.mp4' },
@@ -212,42 +185,13 @@
     showScreen('screen-video');
   }
 
-  function checkCameraSupport() {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      alert('Ваш браузер не поддерживает доступ к камере. ' +
-            'На iOS откройте сайт в Safari (не в приложении соцсети).');
-      return false;
-    }
-    return true;
-  }
-
+  // AR-режим: прямой переход на отдельную страницу ar.html (без iframe)
   function startARMode() {
-    if (!checkCameraSupport()) return;
-
-    var frame = document.getElementById('arFrame');
-    var iframe = document.getElementById('arIframe');
-
-    iframe.src = 'ar.html';
-    frame.className = 'active';
-    document.body.style.overflow = 'hidden';
-
-    // ВАРИАНТ 1: после загрузки iframe имитируем клик внутри, чтобы разрешить автоплей видео и камеру
-    iframe.onload = function() {
-      try {
-        var innerDoc = iframe.contentWindow.document;
-        var evt = new Event('click', { bubbles: true });
-        innerDoc.body.dispatchEvent(evt);
-      } catch (e) {
-        console.log('Не удалось кликнуть внутри iframe:', e);
-      }
-    };
-  }
-
-  function stopARMode() {
-    document.getElementById('arFrame').className = '';
-    document.getElementById('arIframe').src = 'about:blank';
-    document.body.style.overflow = '';
-    showScreen('screen-mode');
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      alert('Ваш браузер не поддерживает доступ к камере. Откройте сайт в Chrome или Safari.');
+      return;
+    }
+    window.location.replace('ar.html');
   }
 
   function saveBlank() {
