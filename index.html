@@ -212,7 +212,6 @@
     showScreen('screen-video');
   }
 
-  // Проверка поддержки getUserMedia (важно для iOS Safari — только на HTTPS)
   function checkCameraSupport() {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       alert('Ваш браузер не поддерживает доступ к камере. ' +
@@ -225,10 +224,23 @@
   function startARMode() {
     if (!checkCameraSupport()) return;
 
-    // Загружаем AR-страницу в iframe — изолированно
-    document.getElementById('arIframe').src = 'ar.html';
-    document.getElementById('arFrame').className = 'active';
+    var frame = document.getElementById('arFrame');
+    var iframe = document.getElementById('arIframe');
+
+    iframe.src = 'ar.html';
+    frame.className = 'active';
     document.body.style.overflow = 'hidden';
+
+    // ВАРИАНТ 1: после загрузки iframe имитируем клик внутри, чтобы разрешить автоплей видео и камеру
+    iframe.onload = function() {
+      try {
+        var innerDoc = iframe.contentWindow.document;
+        var evt = new Event('click', { bubbles: true });
+        innerDoc.body.dispatchEvent(evt);
+      } catch (e) {
+        console.log('Не удалось кликнуть внутри iframe:', e);
+      }
+    };
   }
 
   function stopARMode() {
