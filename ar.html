@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AR</title>
+<script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
+<style>
+  html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; }
+  .ar-video {
+    position: absolute; width: 1px; height: 1px;
+    left: -9999px; top: -9999px; opacity: 0.01;
+  }
+</style>
+</head>
+<body>
+  <a-scene
+    embedded
+    arjs="sourceType: webcam; debugUIEnabled: false;"
+    vr-mode-ui="enabled: false"
+    renderer="logarithmicDepthBuffer: true; antialias: true;"
+    style="width:100%; height:100%;">
+
+    <a-marker type="pattern" url="1-building.patt">
+      <a-video src="#v1" position="0 0 0" width="3" height="1.7" rotation="-90 0 0"></a-video>
+    </a-marker>
+    <a-marker type="pattern" url="2-bridge.patt">
+      <a-video src="#v2" position="0 0 0" width="3" height="1.7" rotation="-90 0 0"></a-video>
+    </a-marker>
+    <a-marker type="pattern" url="3-electric.patt">
+      <a-video src="#v3" position="0 0 0" width="3" height="1.7" rotation="-90 0 0"></a-video>
+    </a-marker>
+    <a-marker type="pattern" url="4-robot.patt">
+      <a-video src="#v4" position="0 0 0" width="3" height="1.7" rotation="-90 0 0"></a-video>
+    </a-marker>
+    <a-marker type="pattern" url="5-vehicles.patt">
+      <a-video src="#v5" position="0 0 0" width="3" height="1.7" rotation="-90 0 0"></a-video>
+    </a-marker>
+    <a-marker type="pattern" url="6-mine.patt">
+      <a-video src="#v6" position="0 0 0" width="3" height="1.7" rotation="-90 0 0"></a-video>
+    </a-marker>
+
+    <a-entity camera></a-entity>
+  </a-scene>
+
+  <video id="v1" class="ar-video" src="1-building.mp4" preload="auto" loop muted playsinline webkit-playsinline></video>
+  <video id="v2" class="ar-video" src="2-bridge.mp4" preload="auto" loop muted playsinline webkit-playsinline></video>
+  <video id="v3" class="ar-video" src="3-electric.mp4" preload="auto" loop muted playsinline webkit-playsinline></video>
+  <video id="v4" class="ar-video" src="4-robot.mp4" preload="auto" loop muted playsinline webkit-playsinline></video>
+  <video id="v5" class="ar-video" src="5-vehicles.mp4" preload="auto" loop muted playsinline webkit-playsinline></video>
+  <video id="v6" class="ar-video" src="6-mine.mp4" preload="auto" loop muted playsinline webkit-playsinline></video>
+
+  <script>
+    window.addEventListener('load', function() {
+      setTimeout(function() {
+        ['v1','v2','v3','v4','v5','v6'].forEach(function(id) {
+          var v = document.getElementById(id);
+          if (v) { v.play().catch(function(){}); }
+        });
+      }, 1000);
+    });
+  </script>
+</body>
+</html>

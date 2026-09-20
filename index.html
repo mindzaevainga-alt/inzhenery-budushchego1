@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Инженеры будущего</title>
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; max-width: 100%; overflow-x: hidden;
+    background: #0d1b2a; color: #fff;
+    font-family: Arial, sans-serif; font-size: 15px; line-height: 1.4;
+  }
+  .screen { display: none; width: 100%; padding: 16px; }
+  .screen.active { display: block; }
+  .title { font-size: 22px; color: #4fc3f7; text-align: center; margin: 40px 0 8px 0; word-wrap: break-word; }
+  .subtitle { font-size: 14px; color: #90a4ae; text-align: center; margin-bottom: 30px; }
+  .mode-btn {
+    display: block; width: 100%; padding: 18px; margin-bottom: 14px;
+    background: #1a2a3a; border: 2px solid #4fc3f7; border-radius: 12px;
+    color: #fff; text-align: left; font-family: Arial, sans-serif;
+    font-size: 15px; cursor: pointer;
+  }
+  .mode-btn .icon { font-size: 24px; margin-right: 10px; }
+  .mode-btn .name { color: #4fc3f7; font-weight: bold; font-size: 16px; display: block; margin-bottom: 4px; }
+  .mode-btn .desc { color: #90a4ae; font-size: 13px; display: block; }
+  .header { width: 100%; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid #4fc3f7; }
+  .back-btn {
+    display: inline-block; width: 40px; height: 40px;
+    background: #1a2a3a; border: 1px solid #4fc3f7; border-radius: 20px;
+    color: #fff; font-size: 18px; text-align: center; line-height: 38px;
+    cursor: pointer; vertical-align: middle; margin-right: 10px;
+  }
+  .header-title { display: inline-block; font-size: 16px; color: #4fc3f7; vertical-align: middle; }
+  .markers { width: 100%; font-size: 0; }
+  .marker {
+    display: inline-block; width: 48%; margin: 1%; padding: 14px 8px;
+    background: #1a2a3a; border: 2px solid #4fc3f7; border-radius: 10px;
+    text-align: center; cursor: pointer; vertical-align: top;
+    min-height: 120px; font-size: 14px;
+  }
+  .marker .num { display: inline-block; width: 40px; height: 40px; background: #4fc3f7; color: #0d1b2a; border-radius: 8px; font-size: 18px; font-weight: bold; line-height: 40px; margin-bottom: 8px; }
+  .marker .label { display: block; font-size: 11px; color: #90a4ae; margin-bottom: 4px; }
+  .marker .name { display: block; font-size: 12px; font-weight: bold; color: #fff; word-wrap: break-word; }
+  .video-box { width: 100%; background: #000; border: 2px solid #4fc3f7; border-radius: 10px; margin-bottom: 14px; position: relative; height: 200px; }
+  .video-box video { width: 100%; height: 100%; display: block; background: #000; border-radius: 8px; }
+  .video-placeholder { position: absolute; top: 0; left: 0; right: 0; bottom: 0; text-align: center; padding-top: 60px; }
+  .video-placeholder .icon { font-size: 40px; display: block; margin-bottom: 10px; }
+  .video-placeholder .label { font-size: 14px; color: #4fc3f7; display: block; margin-bottom: 6px; }
+  .video-placeholder .sub { font-size: 11px; color: #90a4ae; display: block; }
+  .info { width: 100%; background: #1a2a3a; border-left: 4px solid #4fc3f7; border-radius: 8px; padding: 14px; margin-bottom: 14px; }
+  .info-title { font-size: 15px; font-weight: bold; color: #4fc3f7; margin-bottom: 8px; word-wrap: break-word; }
+  .info-desc { font-size: 13px; line-height: 1.5; color: #cfd8dc; margin-bottom: 10px; word-wrap: break-word; }
+  .info-vuz { display: inline-block; background: #0d1b2a; border: 1px solid #4fc3f7; border-radius: 14px; padding: 5px 12px; font-size: 11px; color: #81d4fa; }
+  .btn { display: block; width: 100%; padding: 14px; border-radius: 8px; font-family: Arial, sans-serif; font-size: 15px; font-weight: bold; cursor: pointer; text-align: center; margin-bottom: 10px; }
+  .btn-blue { background: #4fc3f7; color: #0d1b2a; border: none; }
+  .btn-border { background: #0d1b2a; color: #4fc3f7; border: 2px solid #4fc3f7; }
+  .blank { width: 100%; border-collapse: collapse; margin-bottom: 14px; font-size: 12px; }
+  .blank th { background: #1a2a3a; color: #4fc3f7; border: 1px solid #4fc3f7; padding: 8px 4px; text-align: left; font-size: 11px; }
+  .blank td { border: 1px solid #4fc3f7; padding: 4px; vertical-align: top; }
+  .blank .col-num { width: 28px; }
+  .blank .col-spec { width: 40%; }
+  .blank input { width: 100%; background: transparent; border: none; color: #fff; font-family: Arial, sans-serif; font-size: 12px; padding: 4px; outline: none; }
+
+  #arFrame {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 99999; background: #000;
+    display: none;
+  }
+  #arFrame.active { display: block; }
+  #arFrame iframe { width: 100%; height: 100%; border: 0; }
+  #arCloseBtn {
+    position: absolute; top: 10px; left: 10px;
+    z-index: 100000;
+    padding: 10px 14px; border-radius: 20px;
+    background: #000; color: #fff;
+    border: 1px solid #4fc3f7;
+    font-family: Arial; font-size: 13px; cursor: pointer;
+  }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="screen active" id="screen-mode">
+  <div class="title">Инженеры будущего</div>
+  <div class="subtitle">Профориентационное занятие</div>
+  <button class="mode-btn" onclick="startARMode()">
+    <span class="icon">📷</span>
+    <span class="name">AR-режим</span>
+    <span class="desc">Наведи камеру на карточку</span>
+  </button>
+  <button class="mode-btn" onclick="showScreen('screen-markers')">
+    <span class="icon">👆</span>
+    <span class="name">Обычный режим</span>
+    <span class="desc">Нажми на карточку маркера</span>
+  </button>
+</div>
+
+<div class="screen" id="screen-markers">
+  <div class="header">
+    <div class="back-btn" onclick="showScreen('screen-mode')">←</div>
+    <div class="header-title">Выбери маркер</div>
+  </div>
+  <div class="markers">
+    <div class="marker" onclick="openScene(1)"><div class="num">1</div><div class="label">Маркер №1</div><div class="name">Строительство</div></div>
+    <div class="marker" onclick="openScene(2)"><div class="num">2</div><div class="label">Маркер №2</div><div class="name">Дороги и мосты</div></div>
+    <div class="marker" onclick="openScene(3)"><div class="num">3</div><div class="label">Маркер №3</div><div class="name">Электрообеспечение</div></div>
+    <div class="marker" onclick="openScene(4)"><div class="num">4</div><div class="label">Маркер №4</div><div class="name">Робототехника</div></div>
+    <div class="marker" onclick="openScene(5)"><div class="num">5</div><div class="label">Маркер №5</div><div class="name">Транспорт</div></div>
+    <div class="marker" onclick="openScene(6)"><div class="num">6</div><div class="label">Маркер №6</div><div class="name">Разминирование</div></div>
+  </div>
+</div>
+
+<div class="screen" id="screen-video">
+  <div class="header">
+    <div class="back-btn" onclick="showScreen('screen-markers')">←</div>
+    <div class="header-title" id="videoHeader">Маркер</div>
+  </div>
+  <div class="video-box">
+    <div class="video-placeholder" id="videoPlaceholder">
+      <span class="icon">🎬</span>
+      <span class="label" id="placeholderLabel">Видео</span>
+      <span class="sub">Здесь будет видео</span>
+    </div>
+    <video id="videoPlayer" class="hidden" controls playsinline preload="metadata"></video>
+  </div>
+  <div class="info">
+    <div class="info-title" id="specTitle"></div>
+    <div class="info-desc" id="specDesc"></div>
+    <div class="info-vuz" id="vuz"></div>
+  </div>
+  <button class="btn btn-blue" onclick="showScreen('screen-blank')">Заполнить бланк</button>
+  <button class="btn btn-border" onclick="showScreen('screen-markers')">К маркерам</button>
+</div>
+
+<div class="screen" id="screen-blank">
+  <div class="header">
+    <div class="back-btn" onclick="showScreen('screen-video')">←</div>
+    <div class="header-title">Бланк</div>
+  </div>
+  <table class="blank">
+    <tr><th class="col-num">№</th><th class="col-spec">Специальность</th><th>Деятельность</th></tr>
+    <tr><td>1</td><td><input></td><td><input></td></tr>
+    <tr><td>2</td><td><input></td><td><input></td></tr>
+    <tr><td>3</td><td><input></td><td><input></td></tr>
+    <tr><td>4</td><td><input></td><td><input></td></tr>
+    <tr><td>5</td><td><input></td><td><input></td></tr>
+    <tr><td>6</td><td><input></td><td><input></td></tr>
+  </table>
+  <button class="btn btn-blue" onclick="saveBlank()">Сохранить</button>
+  <button class="btn btn-border" onclick="showScreen('screen-markers')">К маркерам</button>
+</div>
+
+<!-- AR-режим: отдельная страница в iframe -->
+<div id="arFrame">
+  <iframe id="arIframe" allow="camera; microphone; xr-spatial-tracking"></iframe>
+  <button id="arCloseBtn" onclick="stopARMode()">← Выйти</button>
+</div>
+
+<script>
+  var scenes = {
+    1: { title: 'Строительство военных объектов', desc: 'Проектирование, возведение и восстановление военных объектов.', vuz: 'Военно-инженерная академия имени Д.М. Карбышева', video: '1-building.mp4' },
+    2: { title: 'Строительство дорог, мостов и тоннелей', desc: 'Наведение переправ, строительство мостов, обеспечение движения войск.', vuz: 'Тюменское высшее военно-инженерное командное училище', video: '2-bridge.mp4' },
+    3: { title: 'Тепло- и электрообеспечение', desc: 'Энергоснабжение войск, эксплуатация электроустановок.', vuz: 'Военно-инженерная академия имени Д.М. Карбышева', video: '3-electric.mp4' },
+    4: { title: 'Робототехника военного назначения', desc: 'Создание и эксплуатация робототехнических комплексов.', vuz: 'Военно-инженерная академия имени Д.М. Карбышева', video: '4-robot.mp4' },
+    5: { title: 'Транспортные средства специального назначения', desc: 'Эксплуатация и ремонт военной автомобильной техники.', vuz: 'Тюменское высшее военно-инженерное командное училище', video: '5-vehicles.mp4' },
+    6: { title: 'Разминирование и преодоление заграждений', desc: 'Поиск и обезвреживание взрывоопасных предметов.', vuz: 'Нижегородское высшее военно-инженерное командное училище', video: '6-mine.mp4' }
+  };
+
+  function showScreen(id) {
+    var s = document.querySelectorAll('.screen');
+    for (var i = 0; i < s.length; i++) s[i].classList.remove('active');
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  function openScene(id) {
+    var d = scenes[id];
+    document.getElementById('videoHeader').textContent = 'Маркер №' + id;
+    document.getElementById('specTitle').textContent = d.title;
+    document.getElementById('specDesc').textContent = d.desc;
+    document.getElementById('vuz').textContent = d.vuz;
+    document.getElementById('placeholderLabel').textContent = 'Видео №' + id;
+
+    var p = document.getElementById('videoPlayer');
+    var ph = document.getElementById('videoPlaceholder');
+
+    p.pause();
+    p.removeAttribute('src');
+    p.load();
+    p.className = 'hidden';
+    ph.className = 'video-placeholder';
+
+    p.src = d.video;
+    p.load();
+
+    p.onloadeddata = function() {
+      ph.className = 'video-placeholder hidden';
+      p.className = '';
+    };
+    p.onerror = function() {
+      ph.className = 'video-placeholder';
+      p.className = 'hidden';
+    };
+
+    showScreen('screen-video');
+  }
+
+  function startARMode() {
+    // Загружаем AR-страницу в iframe — изолированно
+    document.getElementById('arIframe').src = 'ar.html';
+    document.getElementById('arFrame').className = 'active';
+    document.body.style.overflow = 'hidden';
+  }
+
+  function stopARMode() {
+    document.getElementById('arFrame').className = '';
+    document.getElementById('arIframe').src = 'about:blank';
+    document.body.style.overflow = '';
+    showScreen('screen-mode');
+  }
+
+  function saveBlank() {
+    var inputs = document.querySelectorAll('.blank input');
+    var data = [];
+    for (var i = 0; i < inputs.length; i++) data.push(inputs[i].value || '—');
+    alert('Бланк сохранён:\n\n' + data.join(' | '));
+  }
+</script>
+</body>
+</html>
